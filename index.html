@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لعبة كتابة المتباينات</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #f0f8ff, #87ceeb);
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+    }
+    .button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    .question {
+      margin: 20px 0;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .inputs {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+    }
+    .inputs input {
+      width: 60px;
+      font-size: 18px;
+      text-align: center;
+      padding: 5px;
+      margin: 0 10px;
+    }
+    .symbol {
+      font-size: 24px;
+      font-weight: bold;
+      background: #fff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #000;
+      margin: 0 10px;
+    }
+    .feedback {
+      font-size: 20px;
+      margin: 20px;
+    }
+    .correct {
+      color: green;
+    }
+    .wrong {
+      color: red;
+    }
+    .score {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+    .timer {
+      font-size: 20px;
+      color: #ff4500;
+    }
+    footer {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="welcome-screen">
+    <h1>مرحبًا بك في لعبة كتابة المتباينات</h1>
+    <input type="text" id="player-name" placeholder="أدخل اسمك">
+    <button class="button" onclick="startGame()">ابدأ اللعبة</button>
+  </div>
+
+  <div class="container" id="game-screen" style="display: none;">
+    <div class="score" id="score">النقاط: 0</div>
+    <div class="timer" id="timer">الوقت: 30</div>
+    <div class="question" id="question">السؤال هنا</div>
+
+    <div class="inputs">
+      <input type="text" id="variable" placeholder="المتغير">
+      <div class="symbol" id="selected-symbol">?</div>
+      <input type="number" id="number" placeholder="العدد">
+    </div>
+
+    <div>
+      <button class="button" onclick="selectSymbol('<')">&lt;</button>
+      <button class="button" onclick="selectSymbol('≤')">≤</button>
+      <button class="button" onclick="selectSymbol('>')">&gt;</button>
+      <button class="button" onclick="selectSymbol('≥')">≥</button>
+      <button class="button" onclick="selectSymbol('≠')">≠</button>
+    </div>
+
+    <button class="button" onclick="submitAnswer()">إرسال الإجابة</button>
+    <div class="feedback" id="feedback"></div>
+    <button class="button" id="next-question" style="display: none;" onclick="generateQuestion()">السؤال التالي</button>
+  </div>
+
+  <footer>
+    جميع الحقوق محفوظة © أحمد ياسين
+  </footer>
+
+  <script>
+    let playerName = "";
+    let score = 0;
+    let currentQuestion = {};
+    let timer;
+    let timeLeft;
+
+    const questions = [
+      "عدد الطلاب أكبر من",
+      "وزن الصندوق أقل من أو يساوي",
+      "مسموح دخول الطلاب الذين طولهم على الأقل",
+      "الرقم المطلوب لا يساوي",
+      "عمر الطالب أكبر من أو يساوي",
+    ];
+
+    function startGame() {
+      playerName = document.getElementById("player-name").value;
+      if (!playerName) {
+        alert("يرجى إدخال الاسم قبل بدء اللعبة!");
+        return;
+      }
+
+      document.getElementById("welcome-screen").style.display = "none";
+      document.getElementById("game-screen").style.display = "block";
+      score = 0;
+      generateQuestion();
+    }
+
+    function startTimer() {
+      timeLeft = 30;
+      document.getElementById("timer").innerText = `الوقت: ${timeLeft}`;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = `الوقت: ${timeLeft}`;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          document.getElementById("feedback").innerText = "انتهى الوقت!";
+          document.getElementById("feedback").classList.add("wrong");
+          document.getElementById("next-question").style.display = "block";
+        }
+      }, 1000);
+    }
+
+    function generateQuestion() {
+      clearInterval(timer);
+      startTimer();
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      currentQuestion = {
+        text: questions[randomIndex],
+        number: Math.floor(Math.random() * 50) + 1,
+      };
+      document.getElementById("question").innerText = `${currentQuestion.text} ${currentQuestion.number}`;
+      document.getElementById("feedback").innerText = "";
+      document.getElementById("selected-symbol").innerText = "?";
+      document.getElementById("variable").value = "";
+      document.getElementById("number").value = "";
+      document.getElementById("next-question").style.display = "none";
+    }
+
+    function selectSymbol(symbol) {
+      document.getElementById("selected-symbol").innerText = symbol;
+    }
+
+    function submitAnswer() {
+      const variable = document.getElementById("variable").value;
+      const number = document.getElementById("number").value;
+      const symbol = document.getElementById("selected-symbol").innerText;
+
+      if (!variable || !number || symbol === "?") {
+        alert("يرجى إكمال الإجابة أولاً!");
+        return;
+      }
+
+      clearInterval(timer);
+
+      const userAnswer = `${variable} ${symbol} ${number}`;
+      const correctSymbol = determineCorrectSymbol(currentQuestion.text);
+      const correctAnswer = `${variable} ${correctSymbol} ${currentQuestion.number}`;
+
+      let feedbackMessage;
+      if (symbol === correctSymbol && number == currentQuestion.number) {
+        feedbackMessage = `أحسنت ... إجابة صحيحة\nإجابتك: ${userAnswer}\nالإجابة الصحيحة: ${correctAnswer}`;
+        document.getElementById("feedback").className = "feedback correct";
+        score++;
+      } else {
+        feedbackMessage = `إجابة خاطئة\nإجابتك: ${userAnswer}\nالإجابة الصحيحة: ${correctAnswer}`;
+        document.getElementById("feedback").className = "feedback wrong";
+      }
+
+      document.getElementById("feedback").innerText = feedbackMessage;
+      document.getElementById("score").innerText = `النقاط: ${score}`;
+      document.getElementById("next-question").style.display = "block";
+    }
+
+    function determineCorrectSymbol(questionText) {
+      if (questionText.includes("أكبر من أو يساوي")) return "≥";
+      if (questionText.includes("أكبر")) return ">";
+      if (questionText.includes("أقل من أو يساوي")) return "≤";
+      if (questionText.includes("أقل")) return "<";
+      if (questionText.includes("لا يساوي")) return "≠";
+      return "?";
+    }
+
+    function endGame() {
+      alert(`انتهت اللعبة! إجاباتك الصحيحة: ${score}`);
+      document.getElementById("welcome-screen").style.display = "block";
+      document.getElementById("game-screen").style.display = "none";
+      clearInterval(timer);
+    }
+  </script>
+</body>
+</html>
